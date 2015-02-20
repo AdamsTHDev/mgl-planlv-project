@@ -25,14 +25,12 @@
 	</bean>
 
 	<!-- Data Source -->
-	<bean id="DataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
-		<property name="jndiName" value="java:jboss/datasources/KPIDS" />
-	</bean>
+	<import resource="spring-datasource.xml"/>
 
 	<!-- Session Factory Declaration -->
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
-		<property name="dataSource" ref="DataSource" />
+		<property name="dataSource" ref="dataSource" />
 		
 		<property name="packagesToScan" value="com.adms.mglplanlv.entity"/>
 		
@@ -48,8 +46,7 @@
 		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
 
 	<!-- Transaction Manager is defined -->
-	<bean id="txManager"
-		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+	<bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
 
