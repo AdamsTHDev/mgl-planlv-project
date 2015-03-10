@@ -15,21 +15,36 @@
 	http://www.springframework.org/schema/aop 
 	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
 
+	
+	<!-- Autowired -->
 	<context:component-scan base-package="com.adms" />
 	<context:annotation-config />
 	<context:spring-configured />
+
+	<!-- Enable the configuration of transactional behavior based on annotations -->
+	<tx:annotation-driven transaction-manager="txManager" />
+	
 	<aop:aspectj-autoproxy />
+	
+	<!-- Data Source -->
+	<import resource="spring-datasource.xml"/>
+	<import resource="ehcache.xml"/>
 
 	<bean id="hijackBo" class="com.adms.common.service.aop.TimeStampIntercept">
 		<!-- configure properties of aspect here as normal -->
 	</bean>
-
-	<!-- Data Source -->
-	<import resource="spring-datasource.xml"/>
+	
+	<!-- Spring Cache -->
+<!-- 	<bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager"> -->
+<!-- 		<property name="caches"> -->
+<!-- 			<set> -->
+<!-- 				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" name="task" /> -->
+<!-- 			</set> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
 
 	<!-- Session Factory Declaration -->
-	<bean id="sessionFactory"
-		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 		
 		<property name="packagesToScan" value="com.adms.mglplanlv.entity"/>
@@ -38,20 +53,20 @@
 			<props>
 				<prop key="hibernate.dialect">org.hibernate.dialect.SQLServer2012Dialect</prop>
 				<prop key="hibernate.show_sql">false</prop>
+				
+<!-- 				<prop key="hibernate.cache.use_second_level_cache">true</prop> -->
+<!-- 				<prop key="hibernate.cache.use_query_cache">true</prop> -->
+<!-- 				<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop> -->
 			</props>
 		</property>
+		
 	</bean>
 
-	<bean id="persistenceExceptionTranslationPostProcessor"
-		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+	<bean id="persistenceExceptionTranslationPostProcessor" class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
 
 	<!-- Transaction Manager is defined -->
 	<bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
-
-	<!-- Enable the configuration of transactional behavior based on annotations -->
-	<tx:annotation-driven transaction-manager="txManager" />
-
 
 </beans>

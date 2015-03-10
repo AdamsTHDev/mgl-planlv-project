@@ -1,8 +1,7 @@
 package com.adms.mglplanreport.app;
 
-import java.util.Date;
-
 import com.adms.mglplanreport.service.MGLSummaryReport;
+import com.adms.utils.DateUtil;
 
 public class MGLApplication {
 
@@ -12,7 +11,7 @@ public class MGLApplication {
 			System.out.println("START MGL Summary Report");
 			
 			MGLSummaryReport mglSummaryReport = new MGLSummaryReport();
-			mglSummaryReport.generateReport(dir, new Date());
+			mglSummaryReport.generateReport(dir, DateUtil.convStringToDate("yyyyMMdd", "20150131"));
 			
 			System.out.println("END");
 		} catch(Exception e) {

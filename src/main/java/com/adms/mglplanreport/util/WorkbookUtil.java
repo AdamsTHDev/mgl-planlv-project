@@ -1,5 +1,7 @@
 package com.adms.mglplanreport.util;
 
+import java.util.Date;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -57,6 +59,20 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 		case Cell.CELL_TYPE_STRING :
 			toCell.setCellValue(origCell.getRichStringCellValue());
 			break;
+		}
+	}
+	
+	public void setObjectValueToCell(Cell cell, Object value) throws Exception {
+		if(value instanceof String) {
+			cell.setCellValue(String.valueOf(value));
+		} else if(value instanceof Integer) {
+			cell.setCellValue(Integer.valueOf(String.valueOf(value)));
+		} else if(value instanceof Date) {
+			cell.setCellValue((Date) value);
+		} else if(value instanceof Double) {
+			cell.setCellValue(Double.valueOf(String.valueOf(value)));
+		} else {
+			throw new Exception("ERROR: Instance not found for object value: " + value.getClass().getName());
 		}
 	}
 	
