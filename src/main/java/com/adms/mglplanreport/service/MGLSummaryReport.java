@@ -1,9 +1,6 @@
 package com.adms.mglplanreport.service;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,64 +8,49 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.util.IOUtils;
 
-import com.adms.mglplanlv.entity.MglTarget;
 import com.adms.mglplanlv.entity.ProductionByLot;
-import com.adms.mglplanlv.service.mgltarget.MglTargetService;
 import com.adms.mglplanlv.service.productionbylot.ProductionByLotService;
 import com.adms.mglplanreport.enums.ETemplateWB;
 import com.adms.mglplanreport.util.ApplicationContextUtil;
 import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.MGLSummaryObj;
 import com.adms.utils.DateUtil;
+import com.adms.utils.FileUtil;
 
 public class MGLSummaryReport {
 	
-	private final String MTD_STR = "MTD";
-	private final String YTD_STR = "YTD";
+//	private final String MTD_STR = "MTD";
+//	private final String YTD_STR = "YTD";
 	
-	private final int ALL_TEMPLATE_NUM = 5;
-	private final int START_MTD_COL = 2;
+	private final int ALL_TEMPLATE_NUM = 3;
+//	private final int START_MTD_COL = 2;
 	
 	private final int START_TABLE_HEADER_ROW = 7;
 	private final int START_TABLE_DATA_ROW = 9;
 	private final int TEMP_TABLE_TOTAL_ROW = 12;
 	private final String MONTH_PATTERN = DateUtil.getDefaultMonthPattern();
 	
-	private Map<String, String> campaignMap = null;
-	
 	private Map<String, Double[]> sumOfMtdMap = new HashMap<>();
 	private Double[] sumAllOfYTD = new Double[]{0D, 0D};
 	
-	private Map<String, Double> sumOfIAP = new HashMap<>();
+//	private Map<String, Double> sumOfIAP = new HashMap<>();
 	
 	private final String EXPORT_FILE_NAME = "MGL_Summary_#yyyy.xlsx";
 	
-	public MGLSummaryReport() {
-		campaignMap = new HashMap<>();
-		try {
-			Workbook wb = WorkbookFactory.create(Thread.currentThread().getContextClassLoader().getResourceAsStream(ETemplateWB.MGL_CAMPAIGN_NAME_TEMPLATE.getFilePath()));
-			Sheet sheet = wb.getSheetAt(ETemplateWB.MGL_CAMPAIGN_NAME_TEMPLATE.getSheetIndex());
-			for(int r = 1; r <= sheet.getLastRowNum(); r++) {
-				Row row = sheet.getRow(r);
-				campaignMap.put(row.getCell(1).getStringCellValue(), row.getCell(0).getStringCellValue());
-			}
-		} catch (InvalidFormatException | IOException e) {
-			e.printStackTrace();
-		}
-		
-	}
+	private List<Integer> hideCols = new ArrayList<>();
 	
-	public void generateReport(String outPath, Date dataDate) {
-
+	public void generateReport(String outPath, Date processDate) {
+		System.out.println("===========================================");
+		System.out.println("START MGL Summary Report");
 		try {
 			//Template
 			Workbook wb = WorkbookFactory.create(Thread.currentThread().getContextClassLoader().getResourceAsStream(ETemplateWB.MGL_SUMMARY_TEMPLATE.getFilePath()));
@@ -83,25 +65,31 @@ public class MGLSummaryReport {
 			captionCell.setCellStyle(tempSheet.getRow(5).getCell(0, Row.CREATE_NULL_AS_BLANK).getCellStyle());
 			String caption = tempSheet.getRow(5).getCell(0, Row.CREATE_NULL_AS_BLANK).getStringCellValue();
 			String captionDateFormat = "MMM yyyy";
-			captionCell.setCellValue(caption.replace(captionDateFormat, DateUtil.convDateToString(captionDateFormat, dataDate)));
+			captionCell.setCellValue(caption.replace(captionDateFormat, DateUtil.convDateToString(captionDateFormat, processDate)));
 			
 //			set table column header
-			List<MGLSummaryObj> mglSumList = getMGLSummary(dataDate);
+			List<MGLSummaryObj> mglSumList = getMGLSummary(processDate);
 			int maxMonth = getMaxMonthInYear(mglSumList);
 			doTableHeader(tempSheet, toSheet, maxMonth);
 			
-//			insert picture
-			byte[] bytes = IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("template/ADAMS_logo_th.png"));
-			WorkbookUtil.getInstance().addPicture(toSheet, bytes, 0, 0, Workbook.PICTURE_TYPE_PNG);
-			
 //			set table data
-			doTableData(tempSheet, toSheet, maxMonth, mglSumList, dataDate);
+			doTableData(tempSheet, toSheet, maxMonth, mglSumList, processDate);
 			
 //			set table total
 			doTableTotal(tempSheet, toSheet, maxMonth);
 			
-//			hide other months
-			hideOtherMonth(toSheet, maxMonth);
+//			hide cols
+			if(hideCols.size() > 2) {
+				int i = 0;
+				for(int n = 0; n < hideCols.size() - 2; n++) {
+					toSheet.setColumnWidth(hideCols.get(i++), 0);
+				}
+				
+			}
+			
+//			insert picture
+			byte[] bytes = IOUtils.toByteArray(Thread.currentThread().getContextClassLoader().getResourceAsStream("template/ADAMS_logo_th.png"));
+			WorkbookUtil.getInstance().addPicture(toSheet, bytes, 0, 0, Workbook.PICTURE_TYPE_PNG);
 			
 //			remove template sheet(s)
 			for(int r = 0; r < ALL_TEMPLATE_NUM; r++) {
@@ -109,7 +97,7 @@ public class MGLSummaryReport {
 			}
 
 //			write out
-			writeOut(wb, dataDate, outPath);
+			writeOut(wb, processDate, outPath);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -127,15 +115,15 @@ public class MGLSummaryReport {
 		Map<String, Double[]> mtdMap = null;
 		MGLSummaryObj obj = null;
 		
-		MglTargetService mglTargetService = (MglTargetService) ApplicationContextUtil.getApplicationContext().getBean("mglTargetService");
-		List<MglTarget> mglTargets = mglTargetService.find(new MglTarget(DateUtil.convDateToString("yyyy", dataDate)));
+//		TempKeyCodeInPastService mglTargetService = (TempKeyCodeInPastService) ApplicationContextUtil.getApplicationContext().getBean("tempKeyCodeInPastService");
+//		List<TempKeyCodeInPast> mglTargets = mglTargetService.find(new TempKeyCodeInPast(DateUtil.convDateToString("yyyy", dataDate)));
+//		
+//		if(mglTargets == null || mglTargets.isEmpty()) throw new Exception("MGL Targets null");
 		
-		if(mglTargets == null || mglTargets.isEmpty()) throw new Exception("MGL Targets null");
-		
-		Map<String, MglTarget> mglTargetByCampaign = new HashMap<>();
-		for(MglTarget mgl : mglTargets) {
-			mglTargetByCampaign.put(mgl.getCampaign().getCampaignCode(), mgl);
-		}
+//		Map<String, MglTarget> mglTargetByCampaign = new HashMap<>();
+//		for(MglTarget mgl : mglTargets) {
+//			mglTargetByCampaign.put(mgl.getCampaign().getCampaignCode(), mgl);
+//		}
 		
 		ProductionByLotService productionService = (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean("productionByLotService");
 		
@@ -152,7 +140,7 @@ public class MGLSummaryReport {
 		for(ProductionByLot prod : productions) {
 			
 			if(!campaignCode.equals(prod.getListLot().getCampaign().getCampaignCode())){
-				
+				System.out.println("From " + campaignCode + " | to " + prod.getListLot().getCampaign().getCampaignCode());
 				if(StringUtils.isNoneBlank(campaignCode)) {
 					mglSumList.add(obj);
 				}
@@ -160,10 +148,10 @@ public class MGLSummaryReport {
 				campaignCode = prod.getListLot().getCampaign().getCampaignCode();
 				obj = new MGLSummaryObj();
 				obj.setCampaignCode(campaignCode);
-				obj.setCampaignName(campaignMap.get(campaignCode));
+				obj.setCampaignName(prod.getListLot().getCampaign().getCampaignNameMgl());
 
-				obj.setIssuedRate(mglTargetByCampaign.get(campaignCode).getIssuedRate().doubleValue());
-				obj.setPaidRate(mglTargetByCampaign.get(campaignCode).getPaidRate().doubleValue());
+//				obj.setIssuedRate(mglTargetByCampaign.get(campaignCode).getIssuedRate().doubleValue());
+//				obj.setPaidRate(mglTargetByCampaign.get(campaignCode).getPaidRate().doubleValue());
 
 				obj.setIapMTD(0D);
 				obj.setIapYTD(0D);
@@ -249,6 +237,8 @@ public class MGLSummaryReport {
 						CellRangeAddress mergedRegion = new CellRangeAddress(startRow, startRow, cn - 1, cn);
 						toSheet.addMergedRegion(mergedRegion);
 					}
+					
+					if(!hideCols.contains(cn)) hideCols.add(new Integer(cn));
 				
 //				after MTD
 				} else if(((cn + 2) - mtdIdx) > 3) {
@@ -287,6 +277,9 @@ public class MGLSummaryReport {
 	
 	private void doTableData(Sheet tempSheet, Sheet toSheet, int maxMonth, List<MGLSummaryObj> mglSumList, Date processDate) throws Exception {
 //		remark*: flow is same as table header
+		
+		
+		int ytdTarpColIdx = 0, issuedRateColIdx = 0, paidRateColIdx = 0;
 		
 		int startRow = new Integer(START_TABLE_DATA_ROW).intValue();
 		int n = 0;
@@ -357,28 +350,61 @@ public class MGLSummaryReport {
 						toCell.setCellValue(sumOfYtd[idx]);
 						sumAllOfYTD[idx] += sumOfYtd[idx];
 						
+						if(cn % 2 != 0) ytdTarpColIdx = toCell.getColumnIndex();
+						
 					} /* target */ else if(temp > 6) {
 						switch(temp) {
-						case 7 : toCell.setCellValue(mgl.getIssuedRate()); break;
-						case 8 : toCell.setCellValue(mgl.getPaidRate()); break;
+						case 7 : 
+//							issued rate
+							issuedRateColIdx = toCell.getColumnIndex();
+							toCell.setCellValue(0); break;
+						case 8 : 
+//							paid rate
+							paidRateColIdx = toCell.getColumnIndex();
+							toCell.setCellValue(0); break;
 						case 9 : 
-							Double[] mtdVal = mgl.getMTD().get(DateUtil.convDateToString("MMM", processDate));
-							Double iapMTD = mtdVal[1] * mgl.getIssuedRate() * mgl.getPaidRate();
-							toCell.setCellValue(iapMTD);
-							Double sumIapMtd = sumOfIAP.get(MTD_STR);
-							if(sumIapMtd == null) {
-								sumIapMtd = new Double(0);
+//							Double[] mtdVal = mgl.getMTD().get(DateUtil.convDateToString("MMM", processDate));
+//							Double iapMTD = mtdVal[1] * mgl.getIssuedRate() * mgl.getPaidRate();
+//							toCell.setCellValue(iapMTD);
+							
+//							<-- set formula -->
+							if(hideCols.size() > 0) {
+								
+								String iapMtdFormula = 
+										CellReference.convertNumToColString(hideCols.get(hideCols.size() - 1)) + (rn + 1)
+										+ "*"
+										+ CellReference.convertNumToColString(issuedRateColIdx) + (rn + 1)
+										+ "*"
+										+ CellReference.convertNumToColString(paidRateColIdx) + (rn + 1)
+										;
+								toCell.setCellFormula(iapMtdFormula);
 							}
-							sumOfIAP.put(MTD_STR, sumIapMtd + iapMTD);
+							
+//							Double sumIapMtd = sumOfIAP.get(MTD_STR);
+//							if(sumIapMtd == null) {
+//								sumIapMtd = new Double(0);
+//							}
+//							sumOfIAP.put(MTD_STR, sumIapMtd + iapMTD);
 							break;
 						case 10 : 
-							Double iapYTD = toRow.getCell(cn - 5, Row.CREATE_NULL_AS_BLANK).getNumericCellValue() * mgl.getIssuedRate() * mgl.getPaidRate();
-							toCell.setCellValue(iapYTD);
-							Double sumIapYtd = sumOfIAP.get(YTD_STR);
-							if(sumIapYtd == null) {
-								sumIapYtd = new Double(0);
-							}
-							sumOfIAP.put(YTD_STR, sumIapYtd + iapYTD);
+//							Double iapYTD = toRow.getCell(cn - 5, Row.CREATE_NULL_AS_BLANK).getNumericCellValue() * mgl.getIssuedRate() * mgl.getPaidRate();
+//							toCell.setCellValue(iapYTD);
+//							Double sumIapYtd = sumOfIAP.get(YTD_STR);
+							
+							String iapYtdFormula = 
+									CellReference.convertNumToColString(ytdTarpColIdx) + (rn + 1)
+									+ "*"
+									+ CellReference.convertNumToColString(issuedRateColIdx) + (rn + 1)
+									+ "*"
+									+ CellReference.convertNumToColString(paidRateColIdx) + (rn + 1)
+									;
+							
+							toCell.setCellFormula(iapYtdFormula);
+							
+//							if(sumIapYtd == null) {
+//								sumIapYtd = new Double(0);
+//							}
+//							sumOfIAP.put(YTD_STR, sumIapYtd + iapYTD);
 							break;
 						default : break;
 						}
@@ -450,10 +476,10 @@ public class MGLSummaryReport {
 					toCell.setCellValue(sumAllOfYTD[cn % 2 == 0 ? 0 : 1]);
 					
 				} /* target */ else if(temp > 6) {
-					switch(temp) {
-					case 9 : toCell.setCellValue(sumOfIAP.get(MTD_STR)); break;
-					case 10 : toCell.setCellValue(sumOfIAP.get(YTD_STR)); break;
-					default : break;
+					if(temp == 9 || temp == 10) {
+						String sumformula = "SUM(" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (START_TABLE_DATA_ROW + 1) 
+								+ ":" + CellReference.convertNumToColString(toCell.getColumnIndex()) + (toCell.getRowIndex()) + ")";
+							toCell.setCellFormula(sumformula);
 					}
 				}
 				
@@ -473,19 +499,13 @@ public class MGLSummaryReport {
 		
 	}
 	
-	private void hideOtherMonth(Sheet sheet, int maxMonth) {
-		for(int i = START_MTD_COL; i < (maxMonth * 2) - 2; i++) {
-			sheet.setColumnHidden(i, true);
-		}
-	}
-	
 	private void writeOut(Workbook wb, Date processDate, String outPath) throws IOException {
 		String yyyy = "yyyy";
 		String outName = EXPORT_FILE_NAME.replaceAll("#".concat(yyyy), DateUtil.convDateToString(yyyy, processDate));
-		OutputStream os = new FileOutputStream(new File(outPath + "/" + outName));
-		wb.write(os);
-		os.close();
+		FileUtil.getInstance().createDirectory(outPath);
+		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
+		wb = null;
 		System.out.println("Writed");
 	}
 

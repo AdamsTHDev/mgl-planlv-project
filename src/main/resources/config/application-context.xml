@@ -28,7 +28,7 @@
 	
 	<!-- Data Source -->
 	<import resource="spring-datasource.xml"/>
-	<import resource="ehcache.xml"/>
+<!-- 	<import resource="ehcache.xml"/> -->
 
 	<bean id="hijackBo" class="com.adms.common.service.aop.TimeStampIntercept">
 		<!-- configure properties of aspect here as normal -->

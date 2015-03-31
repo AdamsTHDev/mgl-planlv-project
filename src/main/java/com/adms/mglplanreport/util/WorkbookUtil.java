@@ -1,13 +1,19 @@
 package com.adms.mglplanreport.util;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.Date;
 
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Picture;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+import com.adms.utils.FileUtil;
 
 
 public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
@@ -37,6 +43,10 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 		
 		Picture picture = drawing.createPicture(anchor, pictureIdx);
 		picture.resize(resizePercent);
+	}
+	
+	public void refreshAllFormula(Workbook wb) {
+		HSSFFormulaEvaluator.evaluateAllFormulaCells(wb);
 	}
 	
 	public void copyCellValue(Cell origCell, Cell toCell) {
@@ -78,5 +88,16 @@ public class WorkbookUtil extends org.apache.poi.ss.util.WorkbookUtil {
 	
 	public void copyColumnWidth(Sheet origSheet, int origColumnNum, Sheet toSheet, int toColumnNum) {
 		toSheet.setColumnWidth(toColumnNum, origSheet.getColumnWidth(origColumnNum));
+	}
+	
+	public void writeOut(Workbook wb, String dir, String fileName) {
+		try {
+			FileUtil.getInstance().createDirectory(dir);
+			OutputStream os = new FileOutputStream(dir + "/" + fileName);
+			wb.write(os);
+			os.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
