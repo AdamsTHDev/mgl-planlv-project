@@ -1,43 +1,106 @@
-package com.adms.test;
+package com.adms.mglplanreport.app;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Vector;
 
+import com.adms.mglplanreport.util.ZipUtil;
+import com.adms.support.FileWalker;
+import com.adms.utils.DateUtil;
+import com.adms.utils.FileUtil;
 import com.pff.PSTAttachment;
 import com.pff.PSTException;
 import com.pff.PSTFile;
 import com.pff.PSTFolder;
 import com.pff.PSTMessage;
 
-public class TestApp {
+public class GetZipFromEmail {
 
 	private static int depth = -1;
 
 	public static void main(String[] args) {
 
 		try {
-			System.out.println("start");
-			String outDir = "D:/project/reports/MGL/in/zip/201505";
-			File outfile = new File(outDir);
-			if(!outfile.exists()) outfile.mkdirs();
-
+			System.out.println("====== Start ======");
+			
+//			<!-- Getting zip files from email archive(PST file) -->
+//			System.out.println("====== Email ======");
+			String outDir = "D:/project/reports/MGL/zip/201505";
 			PSTFile pstFile = new PSTFile("D:/Email/Archive_PataweeCha_2015.pst");
-
 			System.out.println(pstFile.getMessageStore().getDisplayName());
+//			processPST(pstFile.getRootFolder(), outDir);
 
-			processFolder(pstFile.getRootFolder(), outDir);
-
-			System.out.println("finish");
+//			<!-- UnZip -->
+			System.out.println("====== Unzip ======");
+//			String zipDir = new String(outDir);
+			String zipDir = "D:/project/upload file/auto report/zip";
+			String destination = "D:/project/upload file/auto report/201505";
+			FileWalker fw = new FileWalker();
+			fw.walk(zipDir, new FilenameFilter() {
+				
+				@Override
+				public boolean accept(File dir, String name) {
+					return !name.contains("archive")
+							&& name.endsWith(".zip");
+				}
+			});
+			
+			for(String file : fw.getFileList()) {
+				System.out.println("File: " + file);
+				try{
+					if(file.contains("OTO")) {
+						ZipUtil.extractAll(file, destination + "/OTO", passwordResolver(file));
+					} else if(file.contains("TELE")) {
+						String specific = destination + "/TELE";
+						if(file.contains("MSIG_UOB")) {
+							specific += "/AUTO_MSIGUOB";
+						} else if(file.contains("MTI")) {
+							specific += "/AUTO_MTIKBANK";
+						} else if(file.contains("MTL")) {
+							specific += "/AUTO_MTL";
+						}
+						
+						ZipUtil.extractAll(file, specific, passwordResolver(file));
+						File move = new File(file);
+						FileUtil.getInstance().moveFile(file, move.getParent() + "/archive/" + move.getName());
+					}
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			System.out.println("====== Finish ======");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	
+	private static String passwordResolver(String name) throws ParseException {
+		String OTOPWD = "aeg@n#yyyy", TELEPWD = "Aeg@nReport#yyyyMMdd";
+		
+		if(name.contains("OTO")) {
+			return OTOPWD.replaceAll("#yyyy", name.substring(name.indexOf("_Report") - 4, name.indexOf("_Report")));
+		} else if(name.contains("TELE")) {
+			Calendar calendar = DateUtil.getCurrentCalendar();
+			if(name.contains("ADAMS_")) {
+				calendar.setTime(DateUtil.convStringToDate("yyMMdd", name.substring(name.indexOf(".zip") - 6, name.indexOf(".zip"))));
+			} else {
+				calendar.setTime(DateUtil.convStringToDate("ddMMyyyy", name.substring(name.indexOf(".zip") - 8, name.indexOf(".zip"))));
+			}
+			
+			DateUtil.addDay(calendar, - 1);
+			return TELEPWD.replaceAll("#yyyyMMdd", DateUtil.convDateToString("yyyyMMdd", calendar.getTime()).replaceAll("0", "@"));
+		}
+		
+		return "";
+	}
 
-	private static void processFolder(PSTFolder folder, String outDir) throws PSTException,
-			IOException {
+	private static void processPST(PSTFolder folder, String outDir) throws PSTException, IOException {
 		depth++;
 		// the root folder doesn't have a display name
 		if (depth > 0) {
@@ -49,7 +112,7 @@ public class TestApp {
 		if (folder.hasSubfolders()) {
 			Vector<PSTFolder> childFolders = folder.getSubFolders();
 			for (PSTFolder childFolder : childFolders) {
-				processFolder(childFolder, outDir);
+				processPST(childFolder, outDir);
 			}
 		}
 
@@ -66,10 +129,10 @@ public class TestApp {
 									&& !email.getSubject().toLowerCase().contains("app")
 									&& !email.getSubject().toLowerCase().contains("yesfiles"))) {
 						
+
 						printDepth();
-						System.out.println("Email: " + email.getSubject() + " | from: " + email.getSenderEmailAddress());
-						
 //						@tele-intel.com for TELE, @onetoonecontacts.com for OTO
+						System.out.println("Reading Email: " + email.getSubject() + " | from: " + email.getSenderEmailAddress());
 						getAttachments(email, outDir + "/" + (email.getSenderEmailAddress().endsWith("@tele-intel.com") ? "TELE" : "OTO"));
 					}
 					email = (PSTMessage) folder.getNextChild();

@@ -48,14 +48,13 @@ public class FWDTVDPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		Workbook wb = tempSheet.getWorkbook();
 		
 		Sheet sheet = wb.cloneSheet(wb.getSheetIndex(tempSheet));
-		sheet.setPrintGridlines(false);
 		
 		Cell cell = sheet.getRow(2).getCell(0, Row.CREATE_NULL_AS_BLANK);
 		cell.setCellValue(planLevelMtdObj.getMonthYear());
 
 		setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
 		setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
-		
+		sheet.setPrintGridlines(false);
 	}
 	
 	private void setDataToTable(Sheet sheet, List<PlanLvValue> planLvList, String section) throws Exception {
@@ -69,8 +68,13 @@ public class FWDTVDPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		int ampRowIdx = isMtd ? 5 : 9;
 		
 		for(PlanLvValue planLv : planLvList) {
-			
-			String planType = planLv.getPlanType().toUpperCase();
+			String planType = "";
+			try {
+				planType = planLv.getPlanType().toUpperCase();
+			} catch(Exception e) {
+				System.err.println("Error Plan Type: " + planLv.toString());
+				throw e;
+			}
 			planIdx = getPlanColumnIdx(sheet, planLv.getProduct().toUpperCase(), planType);
 			
 			if(planIdx == 999) {

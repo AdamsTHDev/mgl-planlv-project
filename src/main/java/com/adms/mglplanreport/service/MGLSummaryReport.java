@@ -31,7 +31,7 @@ public class MGLSummaryReport {
 //	private final String MTD_STR = "MTD";
 //	private final String YTD_STR = "YTD";
 	
-	private final int ALL_TEMPLATE_NUM = 3;
+	private int _all_template_num = 0;
 //	private final int START_MTD_COL = 2;
 	
 	private final int START_TABLE_HEADER_ROW = 7;
@@ -54,6 +54,7 @@ public class MGLSummaryReport {
 		try {
 			//Template
 			Workbook wb = WorkbookFactory.create(Thread.currentThread().getContextClassLoader().getResourceAsStream(ETemplateWB.MGL_SUMMARY_TEMPLATE.getFilePath()));
+			_all_template_num = wb.getNumberOfSheets();
 			Sheet tempSheet = wb.getSheetAt(ETemplateWB.MGL_SUMMARY_TEMPLATE.getSheetIndex());
 			Sheet toSheet = wb.createSheet("MGL_SUM");
 			
@@ -92,7 +93,7 @@ public class MGLSummaryReport {
 			WorkbookUtil.getInstance().addPicture(toSheet, bytes, 0, 0, Workbook.PICTURE_TYPE_PNG);
 			
 //			remove template sheet(s)
-			for(int r = 0; r < ALL_TEMPLATE_NUM; r++) {
+			for(int r = 0; r < _all_template_num; r++) {
 				wb.removeSheetAt(0);
 			}
 
@@ -131,7 +132,7 @@ public class MGLSummaryReport {
 				+ " where 1 = 1 "
 				+ " and CONVERT(nvarchar(6), d.productionDate, 112) <= ? "
 				+ " and CONVERT(nvarchar(4), d.productionDate, 112) = ? "
-				+ " order by d.listLot.listLotCode, d.productionDate ";
+				+ " order by d.listLot.campaign.campaignCode, d.listLot.listLotCode, d.productionDate ";
 		List<ProductionByLot> productions = productionService.findByHql(hql, DateUtil.convDateToString("yyyyMM", dataDate), DateUtil.convDateToString("yyyy", dataDate));
 		
 		System.out.println("productions size: " + productions.size());
@@ -141,6 +142,7 @@ public class MGLSummaryReport {
 			
 			if(!campaignCode.equals(prod.getListLot().getCampaign().getCampaignCode())){
 				System.out.println("From " + campaignCode + " | to " + prod.getListLot().getCampaign().getCampaignCode());
+				
 				if(StringUtils.isNoneBlank(campaignCode)) {
 					mglSumList.add(obj);
 				}
@@ -163,8 +165,15 @@ public class MGLSummaryReport {
 			if(mtds == null) {
 				mtds = new Double[]{0D, 0D};
 			}
-			mtds[0] = mtds[0] + prod.getSales().doubleValue();
-			mtds[1] = mtds[1] + prod.getTyp().doubleValue();
+			
+			if(prod.getSales().doubleValue() > 0) {
+				mtds[0] = mtds[0] + prod.getSales().doubleValue();
+			}
+			
+			if(mtds[1] + prod.getTyp().doubleValue() > 0) {			
+				mtds[1] = mtds[1] + prod.getTyp().doubleValue();
+			}
+			
 			mtdMap.put(mmm, mtds);
 
 			obj.setMTD(mtdMap);

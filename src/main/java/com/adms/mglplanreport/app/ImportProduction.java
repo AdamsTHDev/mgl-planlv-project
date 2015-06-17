@@ -231,12 +231,11 @@ public class ImportProduction {
 		}
 	}
 
-	public static void main(String[] args)
-			throws Exception
+	public static void main(String[] args) throws Exception
 	{
 		String fileFormatFileName = /* args[0]; */ null;
 //		String rootPath = /* args[1]; */ "T:/Business Solution/Share/N_Mos/Daily Sales Report/201502";
-		String rootPath = "D:/project/reports/MGL/in/a";
+		String rootPath = "D:/project/upload file/auto report/201505_didi/OTO/addon02";
 
 		ImportProduction batch = new ImportProduction();
 		batch.setLogLevel(Logger.DEBUG);
@@ -251,8 +250,8 @@ public class ImportProduction {
 						&& !name.contains("SalesReportByRecords") 
 						&& (name.contains("Production.xls") 
 								|| name.contains("Production Report.xlsx") 
-								|| (name.contains("Production Report_")
-										&& name.contains(".xlsx"))
+								|| (name.contains("Production Report")
+										&& name.contains(".xls"))
 								|| name.contains("PRODUC"));
 			}
 		});

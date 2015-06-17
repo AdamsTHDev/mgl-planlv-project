@@ -48,13 +48,13 @@ public class MSIGUOBPlanLvGenImpl extends AbstractPlanLevelGenerator {
 		Workbook wb = tempSheet.getWorkbook();
 		
 		Sheet sheet = wb.cloneSheet(wb.getSheetIndex(tempSheet));
-		sheet.setPrintGridlines(false);
 		
 		Cell cell = sheet.getRow(2).getCell(0, Row.CREATE_NULL_AS_BLANK);
 		cell.setCellValue(planLevelMtdObj.getMonthYear());
 
 		setDataToTable(sheet, planLevelMtdObj.getPlanLvValues(), "MTD");
 		setDataToTable(sheet, planLevelYTDObj.getPlanLvValues(), "YTD");
+		sheet.setPrintGridlines(false);
 		
 	}
 	

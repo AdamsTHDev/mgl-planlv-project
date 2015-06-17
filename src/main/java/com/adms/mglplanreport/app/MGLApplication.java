@@ -12,18 +12,18 @@ public class MGLApplication {
 	public static void main(String[] args) {
 		String dir = "D:/project/reports/MGL/out";
 		try {
-			String processDateStr = "20150228";
+			String processDateStr = "20150531";
 			Date processDate = DateUtil.convStringToDate("yyyyMMdd", processDateStr);
 			
-			new MGLSummaryReport().generateReport(dir + "/summary/" + processDateStr.substring(0, 4), processDate);
+			new MGLSummaryReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/summary", processDate);
 			
-			new MGLByCampaignMonthlyReport().generateReport(dir + "/product/" + processDateStr.substring(0, 4), processDate);
+			new MGLByCampaignMonthlyReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/product", processDate);
 			
-			new PlanLVReport().generateReport(dir + "/planlv/" + processDateStr.substring(0, 4), processDate);
+			new PlanLVReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/planlv", processDate);
 			
 			System.out.println("END");
 		} catch(Exception e) {
-			e.printStackTrace();
+			e.printStackTrace();    
 		}
 	}
 }

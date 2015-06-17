@@ -24,7 +24,7 @@ import com.adms.utils.FileUtil;
 public class PlanLVReport {
 	
 	private final String EXPORT_FILE_NAME = "Production-PlanLV-YTD-#MMM_yyyyMM.xlsx";
-	private final int ALL_TEMPLATE_NUM = 13;
+	private int _all_template_num = 0;
 	
 	private Map<String, Integer> _campaignSheetIdxMap;
 	
@@ -48,19 +48,32 @@ public class PlanLVReport {
 			
 			for(Campaign campaign : campaigns) {
 				
+//				<!-- Skip -->
+				if(campaign.getCampaignCode().equals("021PA1715M04")) continue;
+				
+//				if(campaign.getCampaignCode().equals("141BK1715L07")) {
+//					System.out.println("THIS");
+//				}
+				
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
+					_all_template_num = wb.getNumberOfSheets();
 				}
 				
 				System.out.println("Do " + campaign.getCampaignCode() + " - " + campaign.getCampaignNameMgl());
 				try {
 					PlanLevelGenerator planLv = PlanLevelGeneratorFactory.getGenerator(campaign.getCampaignNameMgl());
-					
+//					System.out.println("planLv: " + planLv.getClass());
 					System.out.println("Getting MTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
 					PlanLevelObj mtdData = planLv.getMTDData(campaign.getCampaignCode(), processDate);
 					
 					System.out.println("Getting YTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
 					PlanLevelObj ytdData = planLv.getYTDData(campaign.getCampaignCode(), processDate);
+//					if(campaign.getCampaignCode().equals("021DP1715L03")) {
+//						for(PlanLvValue pv : ytdData.getPlanLvValues()) {
+//							System.out.println(pv.toString());
+//						}
+//					}
 					
 					sheetIdx = _campaignSheetIdxMap.get(campaign.getCampaignCode());
 					
@@ -100,7 +113,7 @@ public class PlanLVReport {
 	private void writeOut(Workbook wb, Date processDate, String outPath) throws IOException {
 		
 //		remove template sheet(s)
-		for(int r = 0; r < ALL_TEMPLATE_NUM; r++) {
+		for(int r = 0; r < _all_template_num; r++) {
 			wb.removeSheetAt(0);
 		}
 		

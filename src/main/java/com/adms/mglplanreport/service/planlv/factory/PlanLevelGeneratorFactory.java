@@ -15,7 +15,8 @@ public class PlanLevelGeneratorFactory {
 		if(campaign.toUpperCase().contains("MTLIFE KBANK")) {
 			return new MTLKbankPlanLvGenImpl();
 			
-		} else if(campaign.toUpperCase().contains("MTLIFE BROKER")) {
+		} else if(campaign.toUpperCase().contains("MTLIFE BROKER")
+				|| campaign.contains("V-Club")) {
 			return new MTLBrokerPlanLvGenImpl();
 			
 		} else if(campaign.toUpperCase().contains("MSIG BROKER")) {

@@ -95,8 +95,12 @@ public class MGLByCampaignMonthlyReport {
 				}
 				
 			}
+			
 //			for last one
 			if(StringUtils.isNotBlank(campaignCode)) {
+//				sum all month
+				doNewSheet(tempSheet, sumProductionByMonth, true);
+				
 //				do write out
 				writeOut(wb, campaignName, processDate, outPath);
 			}
@@ -447,7 +451,7 @@ public class MGLByCampaignMonthlyReport {
 		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		System.out.println("Writed");
+		System.out.println("Writed: " + campaignName);
 	}
 	
 	private void setDataValue(Row tempRow, Row toRow, ProductionByLot product, boolean isSumListLot, boolean isSumMonth, boolean isSumSheet) throws Exception {
