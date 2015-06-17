@@ -11,7 +11,7 @@
 		
 		<property name="driverClassName" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
 		
-		<property name="url" value="jdbc:sqlserver://10.0.1.6:1433;databaseName=SALES"/>
+		<property name="url" value="jdbc:jtds:sqlserver://AEGONSRV04:1433;databaseName=SALES"/>
 		<property name="username" value="sa01"/>
 		<property name="password" value="Aegon03"/>
 
