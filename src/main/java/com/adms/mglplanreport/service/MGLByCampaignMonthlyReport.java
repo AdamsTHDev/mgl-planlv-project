@@ -21,6 +21,7 @@ import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.MGLMonthlyObj;
 import com.adms.utils.DateUtil;
 import com.adms.utils.FileUtil;
+import com.adms.utils.Logger;
 
 public class MGLByCampaignMonthlyReport {
 	
@@ -40,10 +41,11 @@ public class MGLByCampaignMonthlyReport {
 	private String EXPORT_FILE_NAME = "Production_Report-#campaignName_(forMGL)-#yyyyMMdd.xlsx";
 	
 	private MGLMonthlyObj sumProductionByMonth;
+	
+	private static Logger logger = Logger.getLogger();
 
 	public void generateReport(String outPath, Date processDate) {
-		System.out.println("===========================================");
-		System.out.println("MGL Production Report by Campaign");
+		logger.info("## MGL Production Report by Campaign ##");
 		try {
 //			Template
 			Workbook wb = null;
@@ -55,7 +57,7 @@ public class MGLByCampaignMonthlyReport {
 			String campaignCode = "";
 			String campaignName = "";
 			String monthStr = "";
-			System.out.println("MGLObjs size: " + MGLObjs.size());
+			logger.info("MGLObjs size: " + MGLObjs.size());
 			for(MGLMonthlyObj mglMonthlyObj : MGLObjs) {
 				
 				if(!campaignCode.equals(mglMonthlyObj.getCampaignCode())) {
@@ -116,7 +118,7 @@ public class MGLByCampaignMonthlyReport {
 		try {
 			toSheet = tempSheet.getWorkbook().createSheet(mglMonthlyObj.getMonth());
 		} catch(Exception e) {
-			System.out.println(mglMonthlyObj.getMonth());
+			logger.error("Error when creating sheet name: " + mglMonthlyObj.getMonth());
 			throw e;
 		}
 		
@@ -146,7 +148,6 @@ public class MGLByCampaignMonthlyReport {
 				+ " and CONVERT(nvarchar(4), d.productionDate, 112) = ? "
 //				+ " and d.listLot.listLotCode in ('AAM15', 'AAN15') "
 				+ " order by d.listLot.campaign.campaignCode, CONVERT(nvarchar(6), d.productionDate, 112), d.listLot.listLotCode ";
-		System.out.println("query: " + hql);
 		List<ProductionByLot> prodList = service.findByHql(hql, yearMonth, yearMonth.substring(0, 4));
 		
 		if(prodList == null || prodList != null && prodList.size() == 0) {
@@ -160,13 +161,10 @@ public class MGLByCampaignMonthlyReport {
 		String campaignCode = "";
 		
 		for(ProductionByLot prod : prodList) {
-//			System.out.println(prod.toString());
 			String currMonth = DateUtil.convDateToString(SHEET_NAME_PATTERN, prod.getProductionDate());
 			String currCampaign = prod.getListLot().getCampaign().getCampaignCode();
 			
 			if(!campaignCode.equals(currCampaign) || !month.equals(currMonth)) {
-				System.out.println("Campaign: " + campaignCode + " | to " + currCampaign);
-				System.out.println("Date: " + month + " | to " + DateUtil.convDateToString(SHEET_NAME_PATTERN, prod.getProductionDate()));
 				
 				if(mgl != null) {
 					mglList.add(mgl);
@@ -451,7 +449,7 @@ public class MGLByCampaignMonthlyReport {
 		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		System.out.println("Writed: " + campaignName);
+		logger.info("Writed: " + campaignName);
 	}
 	
 	private void setDataValue(Row tempRow, Row toRow, ProductionByLot product, boolean isSumListLot, boolean isSumMonth, boolean isSumSheet) throws Exception {

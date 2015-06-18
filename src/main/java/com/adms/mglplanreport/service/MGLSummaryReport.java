@@ -25,6 +25,7 @@ import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.MGLSummaryObj;
 import com.adms.utils.DateUtil;
 import com.adms.utils.FileUtil;
+import com.adms.utils.Logger;
 
 public class MGLSummaryReport {
 	
@@ -48,9 +49,10 @@ public class MGLSummaryReport {
 	
 	private List<Integer> hideCols = new ArrayList<>();
 	
+	private static Logger logger = Logger.getLogger();
+	
 	public void generateReport(String outPath, Date processDate) {
-		System.out.println("===========================================");
-		System.out.println("START MGL Summary Report");
+		logger.info("## Start MGL Summary Report ##");
 		try {
 			//Template
 			Workbook wb = WorkbookFactory.create(Thread.currentThread().getContextClassLoader().getResourceAsStream(ETemplateWB.MGL_SUMMARY_TEMPLATE.getFilePath()));
@@ -110,7 +112,7 @@ public class MGLSummaryReport {
 
 	private List<MGLSummaryObj> getMGLSummary(Date dataDate) throws Exception {
 //		for Test
-		System.out.println("Get Production By Lot datas...");
+		logger.info("Get Production By Lot datas...");
 		List<MGLSummaryObj> mglSumList = new ArrayList<>();
 		
 		Map<String, Double[]> mtdMap = null;
@@ -135,13 +137,13 @@ public class MGLSummaryReport {
 				+ " order by d.listLot.campaign.campaignCode, d.listLot.listLotCode, d.productionDate ";
 		List<ProductionByLot> productions = productionService.findByHql(hql, DateUtil.convDateToString("yyyyMM", dataDate), DateUtil.convDateToString("yyyy", dataDate));
 		
-		System.out.println("productions size: " + productions.size());
+		logger.info("productions size: " + productions.size());
 		
 		String campaignCode = "";
 		for(ProductionByLot prod : productions) {
 			
 			if(!campaignCode.equals(prod.getListLot().getCampaign().getCampaignCode())){
-				System.out.println("From " + campaignCode + " | to " + prod.getListLot().getCampaign().getCampaignCode());
+				logger.info("From " + campaignCode + " | to " + prod.getListLot().getCampaign().getCampaignCode());
 				
 				if(StringUtils.isNoneBlank(campaignCode)) {
 					mglSumList.add(obj);
@@ -515,7 +517,7 @@ public class MGLSummaryReport {
 		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		System.out.println("Writed");
+		logger.info("Writed to " + outPath + "/" + outName);
 	}
 
 }

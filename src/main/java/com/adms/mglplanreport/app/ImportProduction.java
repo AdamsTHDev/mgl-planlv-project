@@ -2,6 +2,7 @@ package com.adms.mglplanreport.app;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -10,22 +11,20 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
 import com.adms.imex.excelformat.DataHolder;
 import com.adms.imex.excelformat.ExcelFormat;
 import com.adms.mglplanlv.entity.ListLot;
 import com.adms.mglplanlv.entity.ProductionByLot;
 import com.adms.mglplanlv.service.listlot.ListLotService;
 import com.adms.mglplanlv.service.productionbylot.ProductionByLotService;
+import com.adms.mglplanreport.util.ApplicationContextUtil;
 import com.adms.support.FileWalker;
 import com.adms.utils.Logger;
 
 public class ImportProduction {
 	
 	public static final String BATCH_ID = "BATCH_ID";
-	public static final String APPLICATION_CONTEXT_FILE = "config/application-context.xml";
+//	public static final String APPLICATION_CONTEXT_FILE = "config/application-context.xml";
 
 	public static final String FILE_FORMAT_PRODUCTION_BY_LOT_TELE = "fileformat/FileFormat_SSIS_DailyProductionByLot-input-TELE.xml";
 	public static final String FILE_FORMAT_PRODUCTION_BY_LOT_OTO = "fileformat/FileFormat_SSIS_DailyProductionByLot-input-OTO.xml";
@@ -33,33 +32,41 @@ public class ImportProduction {
 	public static final String PRODUCTION_BY_LOT_SERVICE_BEAN = "productionByLotService";
 	public static final String LIST_LOT_SERVICE_BEAN = "listLotService";
 
-	private ApplicationContext applicationContext;
+//	private ApplicationContext applicationContext;
 	protected Logger log = Logger.getLogger(Logger.DEBUG);
 
 	protected void setLogLevel(int logLevel)
 	{
 		this.log.setLogLevel(logLevel);
 	}
-
-
-	protected Object getBean(String beanId)
-	{
-		if (this.applicationContext == null)
-		{
-			this.applicationContext = new ClassPathXmlApplicationContext(APPLICATION_CONTEXT_FILE);
+	
+	protected void setLogFileName(String fileName) {
+		try {
+			this.log.setLogFileName(fileName);
+		} catch (FileNotFoundException e) {
+			log.error(e.getMessage(), e);
 		}
-
-		return this.applicationContext.getBean(beanId);
 	}
+
+
+//	protected Object getBean(String beanId)
+//	{
+//		if (this.applicationContext == null)
+//		{
+//			this.applicationContext = new ClassPathXmlApplicationContext(APPLICATION_CONTEXT_FILE);
+//		}
+//
+//		return this.applicationContext.getBean(beanId);
+//	}
 
 	protected ProductionByLotService getProductionByLotService()
 	{
-		return (ProductionByLotService) getBean(PRODUCTION_BY_LOT_SERVICE_BEAN);
+		return (ProductionByLotService) ApplicationContextUtil.getApplicationContext().getBean(PRODUCTION_BY_LOT_SERVICE_BEAN);
 	}
 
 	protected ListLotService getListLotService()
 	{
-		return (ListLotService) getBean(LIST_LOT_SERVICE_BEAN);
+		return (ListLotService) ApplicationContextUtil.getApplicationContext().getBean(LIST_LOT_SERVICE_BEAN);
 	}
 
 	private ProductionByLot extractRecord(DataHolder dataHolder, ProductionByLot productionByLot)
@@ -235,10 +242,14 @@ public class ImportProduction {
 	{
 		String fileFormatFileName = /* args[0]; */ null;
 //		String rootPath = /* args[1]; */ "T:/Business Solution/Share/N_Mos/Daily Sales Report/201502";
-		String rootPath = "D:/project/upload file/auto report/201505_didi/OTO/addon02";
+//		String rootPath = "D:/project/upload file/auto report/201505_didi/OTO/addon02";
+		String rootPath = args[0];
+		String logPath = args[1];
 
 		ImportProduction batch = new ImportProduction();
 		batch.setLogLevel(Logger.DEBUG);
+		
+		batch.setLogFileName(logPath);
 
 		FileWalker fw = new FileWalker();
 		fw.walk(rootPath, new FilenameFilter()

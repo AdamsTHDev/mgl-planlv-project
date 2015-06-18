@@ -20,6 +20,7 @@ import com.adms.mglplanreport.util.WorkbookUtil;
 import com.adms.mglpplanreport.obj.PlanLevelObj;
 import com.adms.utils.DateUtil;
 import com.adms.utils.FileUtil;
+import com.adms.utils.Logger;
 
 public class PlanLVReport {
 	
@@ -28,10 +29,11 @@ public class PlanLVReport {
 	
 	private Map<String, Integer> _campaignSheetIdxMap;
 	
+	private static Logger logger = Logger.getLogger();
+	
 	public PlanLVReport() {
 		try {
-			System.out.println("===========================================");
-			System.out.println("Plan Level Report");
+			logger.info("## Plan Level Report ##");
 			initCampaignSheet(WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath())));
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -51,29 +53,18 @@ public class PlanLVReport {
 //				<!-- Skip -->
 				if(campaign.getCampaignCode().equals("021PA1715M04")) continue;
 				
-//				if(campaign.getCampaignCode().equals("141BK1715L07")) {
-//					System.out.println("THIS");
-//				}
-				
 				if(wb == null) {
 					wb = WorkbookFactory.create(ClassLoader.getSystemResourceAsStream(ETemplateWB.PLAN_LV_TEMPLATE.getFilePath()));
 					_all_template_num = wb.getNumberOfSheets();
 				}
 				
-				System.out.println("Do " + campaign.getCampaignCode() + " - " + campaign.getCampaignNameMgl());
 				try {
 					PlanLevelGenerator planLv = PlanLevelGeneratorFactory.getGenerator(campaign.getCampaignNameMgl());
-//					System.out.println("planLv: " + planLv.getClass());
-					System.out.println("Getting MTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
+					logger.info("Getting MTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
 					PlanLevelObj mtdData = planLv.getMTDData(campaign.getCampaignCode(), processDate);
 					
-					System.out.println("Getting YTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
+					logger.info("Getting YTD Data: " + campaign.getCampaignCode() + " | processDate: " + DateUtil.convDateToString("yyyyMMdd", processDate));
 					PlanLevelObj ytdData = planLv.getYTDData(campaign.getCampaignCode(), processDate);
-//					if(campaign.getCampaignCode().equals("021DP1715L03")) {
-//						for(PlanLvValue pv : ytdData.getPlanLvValues()) {
-//							System.out.println(pv.toString());
-//						}
-//					}
 					
 					sheetIdx = _campaignSheetIdxMap.get(campaign.getCampaignCode());
 					
@@ -100,12 +91,10 @@ public class PlanLVReport {
 		for(int i = 0; i < wb.getNumberOfSheets(); i++) {
 			_campaignSheetIdxMap.put(wb.getSheetAt(i).getRow(0).getCell(1, Row.CREATE_NULL_AS_BLANK).getStringCellValue(), i);
 		}
-		System.out.println("campaignSheetIdxMap size: " + _campaignSheetIdxMap.size());
 		wb.close();
 	}
 
 	private List<Campaign> getAllCampaignInYear(Date processDate) throws Exception {
-		System.out.println("Get All Campaign in Year: " + DateUtil.convDateToString("yyyy", processDate));
 		CampaignService service = (CampaignService) ApplicationContextUtil.getApplicationContext().getBean("campaignService");
 		return service.findCampaignByLikeListLot("%"  + DateUtil.convDateToString("yy", processDate));
 	}
@@ -130,7 +119,7 @@ public class PlanLVReport {
 		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		System.out.println("Writed");
+		logger.info("Writed: " + outPath + "/" + outName);
 	}
 	
 	private void sortingSheets(Workbook wb) {
