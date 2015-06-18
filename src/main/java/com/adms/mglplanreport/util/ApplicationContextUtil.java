@@ -5,7 +5,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class ApplicationContextUtil {
 
-	private final static String contextPath = "/config/application-context.xml";
+	private final static String contextPath = "/config/application-context-mgl-report.xml";
 	
 	private static ApplicationContext ctx;
 	
