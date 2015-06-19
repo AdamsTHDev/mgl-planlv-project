@@ -7,7 +7,6 @@
 	<version>1.0</version>
 
 	<properties>
-		<spring.version>4.0.6.RELEASE</spring.version>
 
 	</properties>
 
@@ -26,36 +25,34 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>1.7</version>
+				<version>1.7.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
-						<configuration>
-							<!-- Optional -->
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>shaded</shadedClassifierName>
-							<!-- /Optional -->
-							<transformers>
-								<transformers
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Class-Path>.</Class-Path>
-										<Main-Class></Main-Class>
-									</manifestEntries>
-								</transformers>
-							</transformers>
-							<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-								<resource>META-INF/spring.handlers</resource>
-							</transformer>
-							<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-								<resource>META-INF/spring.schemas</resource>
-							</transformer>
-						</configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<shadedArtifactAttached>true</shadedArtifactAttached>
+					<shadedClassifierName>shaded</shadedClassifierName>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<manifestEntries>
+								<Class-Path>.</Class-Path>
+								<Main-Class></Main-Class>
+							</manifestEntries>
+						</transformer>
+						<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+							<resource>META-INF/spring.handlers</resource>
+						</transformer>
+						<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+							<resource>META-INF/spring.schemas</resource>
+						</transformer>
+					</transformers>
+				</configuration>
 			</plugin>
 
 		</plugins>
@@ -108,6 +105,12 @@
 			<groupId>net.sourceforge.jtds</groupId>
 			<artifactId>jtds</artifactId>
 			<version>1.3.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
+			<version>4.0.1.RELEASE</version>
 		</dependency>
 
 	</dependencies>
