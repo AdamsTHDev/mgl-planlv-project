@@ -35,16 +35,15 @@
 						</goals>
 						<configuration>
 							<!-- Optional -->
-							<finalName>MGL-PlanLv</finalName>
 							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+							<shadedClassifierName>shaded</shadedClassifierName>
 							<!-- /Optional -->
 							<transformers>
 								<transformers
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Class-Path>.</Class-Path>
-										<Main-Class>com.adms.mglplanreport.app.MGLApplication</Main-Class>
+										<Main-Class></Main-Class>
 									</manifestEntries>
 								</transformers>
 							</transformers>
