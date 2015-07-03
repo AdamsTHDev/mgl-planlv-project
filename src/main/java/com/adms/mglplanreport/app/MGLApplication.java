@@ -15,11 +15,14 @@ public class MGLApplication {
 	public static void main(String[] args) {
 		try {
 			logger.setLogFileName(args[2]);
+//			logger.setLogFileName("d:/temp/log.log");
 			
 			String processDateStr = args[0];
-//			String dir = "D:/project/reports/MGL/out";
-			String dir = args[1];
+//			String processDateStr = "20150630";
 			Date processDate = DateUtil.convStringToDate("yyyyMMdd", processDateStr);
+			
+//			String dir = "D:/temp/MGL/out";
+			String dir = args[1];
 			
 			new MGLSummaryReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/summary", processDate);
 			
