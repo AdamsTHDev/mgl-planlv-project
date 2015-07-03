@@ -1,5 +1,6 @@
 package com.adms.mglplanreport.app;
 
+import java.io.File;
 import java.util.Date;
 
 import com.adms.mglplanreport.service.MGLByCampaignMonthlyReport;
@@ -24,11 +25,11 @@ public class MGLApplication {
 //			String dir = "D:/temp/MGL/out";
 			String dir = args[1];
 			
-			new MGLSummaryReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/summary", processDate);
+			new MGLSummaryReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "summary", processDate);
 			
-			new MGLByCampaignMonthlyReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/production", processDate);
+			new MGLByCampaignMonthlyReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "production", processDate);
 			
-			new PlanLVReport().generateReport(dir + "/" + processDateStr.substring(0, 6) + "/planlv", processDate);
+			new PlanLVReport().generateReport(dir + File.separatorChar + processDateStr.substring(0, 6) + File.separatorChar + "planlv", processDate);
 			
 			logger.info("### Finish ###");
 		} catch(Exception e) {

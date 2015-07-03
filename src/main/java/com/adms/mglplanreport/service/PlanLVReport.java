@@ -117,10 +117,10 @@ public class PlanLVReport {
 		String outName = EXPORT_FILE_NAME.replaceAll("#".concat("MMM_yyyyMM"), DateUtil.convDateToString("MMM_yyyyMM", processDate));
 		
 		FileUtil.getInstance().createDirectory(outPath);
-		WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
+		String outDir = WorkbookUtil.getInstance().writeOut(wb, outPath, outName);
 		wb.close();
 		wb = null;
-		logger.info("Writed: " + outPath + "/" + outName);
+		logger.info("Writed: " + outDir);
 	}
 	
 	private void sortingSheets(Workbook wb) {
